@@ -10,7 +10,7 @@ Give me a detailed beat and bar structure for an EDM song in the genre of:
 
 ENTER THE MUSIC GENRE HERE e.g., melodic dubstep, bass-house, cottage-core, etc.
 
-Include Intro, Build-up, Drop, Breakdown, and Outro sections.
+Include Intro, Build-up, Drop, Breakdown, and Outro sectiogins.
 Format it with clear headings and describe the percussion, bass, melody, and effects in each section.""")
 
 if st.button("Generate"):
