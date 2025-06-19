@@ -1,7 +1,8 @@
 #Import libraries
 import boto3
-from langchain_community.embeddings import BedrockEmbeddings
+from langchain_aws import BedrockEmbeddings
 from langchain_community.llms import Bedrock
+from langchain_community.chat_models import BedrockChat
 from langchain.prompts.prompt import PromptTemplate
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
@@ -19,12 +20,12 @@ def config_llm():
     client = boto3.client('bedrock-runtime')
 
     model_kwargs = { 
-        "max_tokens_to_sample": 512,
+        "maxTokenCount": 512,
         "temperature":0.1,  
-        "top_p":1
+        "topP":1
     }  
-
-    model_id = "anthropic.claude-instant-v1"
+    model_id = "amazon.titan-text-express-v1"
+ #   model_id = "anthropic.claude-instant-v1"
     llm = Bedrock(model_id=model_id, client=client)
     llm.model_kwargs = model_kwargs
     return llm
@@ -32,7 +33,28 @@ def config_llm():
 @st.cache_resource
 def config_vector_db(filename):
     client = boto3.client('bedrock-runtime')
-    bedrock_embeddings = BedrockEmbeddings(client=client)
+    
+    # Try both embeddings models
+    embeddings_models = [
+        "amazon.titan-embed-text-v1",
+        "amazon.titan-embed-text-v2:0"
+    ]
+    
+    for model_id in embeddings_models:
+        try:
+            bedrock_embeddings = BedrockEmbeddings(
+                client=client,
+                model_id=model_id
+            )
+            st.success(f"Using embeddings model: {model_id}")
+            break
+        except Exception as e:
+            st.warning(f"Failed to access {model_id}: {str(e)}")
+            continue
+    else:
+        st.error("No embeddings model available")
+        return None
+    
     loader = PyPDFLoader(filename)
     pages = loader.load_and_split()
     vectorstore_faiss = FAISS.from_documents(pages, bedrock_embeddings)
@@ -41,6 +63,11 @@ def config_vector_db(filename):
 #Configuring the llm and vector store
 llm = config_llm()
 vectorstore_faiss = config_vector_db("03_06e/social-media-training.pdf")
+
+# Add this check
+if vectorstore_faiss is None:
+    st.error("Cannot proceed without embeddings access. Please wait for model approval.")
+    st.stop()
 
 #Set up memory
 msgs = StreamlitChatMessageHistory(key="langchain_messages")

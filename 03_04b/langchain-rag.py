@@ -17,10 +17,11 @@ def config_llm():
     model_kwargs = { 
         "max_tokens_to_sample": 512,
         "temperature":0.1,  
-        "topP":1
+        "top_P":1
     }  
+    model_id = "amazon.titan-text-express-v1"
 
-    model_id = "anthropic.claude-instant-v1"
+    #model_id = "anthropic.claude-instant-v1"
     llm = Bedrock(model_id=model_id, client=client)
     llm.model_kwargs = model_kwargs
     return llm
@@ -42,6 +43,8 @@ def vector_search (query):
 
 
 #Configuring the llm and vector store
+llm = config_llm()
+vectorstore_faiss = config_vector_db('03_04b/social-media-training.pdf')
 
 
 #Creating the template   
@@ -61,7 +64,20 @@ Assistant:
 """
 
 #Configure prompt template
-
+prompt_template = PromptTemplate(
+    input_variables=["info", "input"],
+    template = my_template
+)
 #Create llm chain
+question_chain = LLMChain(
+    llm=llm, 
+    prompt = prompt_template,
+    output_key="answer"
+    )
 
 #Get question, peform similarity search, invoke model and return result
+while True:
+    question = input("Enter your question: ")
+    info = vector_search(question)
+    output = question_chain.invoke({"info":info, "input":question})
+    print(output['answer'])

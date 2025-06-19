@@ -15,12 +15,12 @@ def config_llm():
     client = boto3.client('bedrock-runtime')
 
     model_kwargs = { 
-        "max_tokens_to_sample": 512,
+        "max_tokens": 512,
         "temperature":0.1,  
         "top_p":1
     }  
-
-    model_id = "anthropic.claude-instant-v1"
+#    model_id = "amazon.titan-text-lite-v1"
+    model_id = "amazon.titan-text-lite-v1"
     llm = Bedrock(model_id=model_id, client=client)
     llm.model_kwargs = model_kwargs
     return llm
@@ -28,6 +28,7 @@ def config_llm():
 def config_vector_db(filename):
     client = boto3.client('bedrock-runtime')
     bedrock_embeddings = BedrockEmbeddings(client=client)
+    print(f"Embeddings model: {bedrock_embeddings.model_id}")
     loader = PyPDFLoader(filename)
     pages = loader.load_and_split()
     vectorstore_faiss = FAISS.from_documents(pages, bedrock_embeddings)

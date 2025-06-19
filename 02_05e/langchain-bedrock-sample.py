@@ -14,18 +14,15 @@ inference_modifier = {
 
 #Create the llm
 llm = Bedrock(
-  model_id="anthropic.claude-instant-v1",
+  model_id = "amazon.titan-text-express-v1",
   client = boto3_client,
-  model_kwargs= inference_modifier
+  model_kwargs = inference_modifier
 )
 
 #Generate the response
 response = llm.invoke ("""
-  Human: Write an email from Mark, Hiring Manager,
-  welcoming a new employee "John Doe" to the company on his first day.
-                       
-  Answer:""")
-
+  Write an email from Mark, Hiring Manager,
+  welcoming a new employee "John Doe" to the company on his first day.""")
 
 #Display the result
 print (response)
